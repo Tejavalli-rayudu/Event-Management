@@ -1,0 +1,89 @@
+/* Home Page */
+
+.home-container {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  color: white;
+  text-align: center;
+  padding-top: 80px;
+}
+
+/* Navbar links */
+.navbar {
+  background-color: #ffffff;
+  padding: 15px 30px;
+  display: flex;
+  justify-content: center;
+  gap: 25px;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+}
+
+.navbar a {
+  text-decoration: none;
+  color: #333;
+  font-weight: 600;
+  font-size: 16px;
+}
+
+.navbar a:hover {
+  color: #667eea;
+}
+
+
+/* Main heading */
+.home-container h1 {
+  font-size: 45px;
+  margin-bottom: 20px;
+}
+
+
+/* Description */
+.home-container p {
+  font-size: 20px;
+  width: 70%;
+  margin: auto;
+  line-height: 1.6;
+}
+
+
+/* Buttons */
+.home-buttons {
+  margin-top: 40px;
+}
+
+.home-buttons a {
+  text-decoration: none;
+  background-color: white;
+  color: #667eea;
+  padding: 12px 30px;
+  margin: 10px;
+  border-radius: 25px;
+  font-size: 18px;
+  font-weight: bold;
+  transition: 0.3s;
+}
+
+
+.home-buttons a:hover {
+  background-color: #333;
+  color: white;
+}
+
+
+/* Responsive */
+@media(max-width:768px){
+
+  .navbar {
+    flex-direction: column;
+    gap: 15px;
+  }
+
+  .home-container h1 {
+    font-size: 32px;
+  }
+
+  .home-container p {
+    width: 90%;
+    font-size: 16px;
+  }
+}
