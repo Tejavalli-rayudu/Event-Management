@@ -1,12 +1,13 @@
 const db = require("../config/db");
-const bcrypt = require("bcrypt");
+const jwt = require("jsonwebtoken");
+const bcrypt = require("bcryptjs");
 
-// ================= REGISTER =================
+// REGISTER
 exports.register = async (req, res) => {
   try {
     const { name, email, password, role } = req.body;
 
-    // Hash the password
+    // hash password
     const hashedPassword = await bcrypt.hash(password, 10);
 
     await db.query(
@@ -18,7 +19,6 @@ exports.register = async (req, res) => {
       success: true,
       message: "User registered successfully"
     });
-
   } catch (error) {
     console.error(error);
     res.status(500).json({
@@ -28,12 +28,12 @@ exports.register = async (req, res) => {
   }
 };
 
-// ================= LOGIN =================
+// LOGIN
 exports.login = async (req, res) => {
   try {
     const { email, password } = req.body;
 
-    // Find user by email
+    // find user by email
     const [rows] = await db.query(
       "SELECT * FROM users WHERE email = ?",
       [email]
@@ -47,15 +47,9 @@ exports.login = async (req, res) => {
     }
 
     const user = rows[0];
-    let isMatch = false;
 
-    // If password is bcrypt hash
-    if (user.password.startsWith("$2b$")) {
-      isMatch = await bcrypt.compare(password, user.password);
-    } else {
-      // Plain-text password (Anil)
-      isMatch = password === user.password;
-    }
+    // compare password with hashed password
+    const isMatch = await bcrypt.compare(password, user.password);
 
     if (!isMatch) {
       return res.status(401).json({
@@ -64,14 +58,16 @@ exports.login = async (req, res) => {
       });
     }
 
+    const token = jwt.sign(
+      { id: user.user_id, role: user.role },
+      process.env.JWT_SECRET,
+      { expiresIn: "1h" }
+    );
+
     res.json({
       success: true,
-      data: {
-        token: "dummy-token",
-        user
-      }
+      data: { token, user }
     });
-
   } catch (error) {
     console.error(error);
     res.status(500).json({

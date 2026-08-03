@@ -1,5 +1,6 @@
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
+import "./Navbar.css";
 
 const Navbar = () => {
   const { logout, isAuthenticated } = useAuth();
@@ -11,7 +12,7 @@ const Navbar = () => {
   }
 
   return (
-    <div>
+    <div className="navbar">
       <Link to="/">Event Management</Link> |
       <Link to="/admin">Admin Dashboard</Link> |
       <Link to="/student">Student Dashboard</Link> |
