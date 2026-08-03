@@ -1,6 +1,7 @@
 import React, { useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
+import "./Auth.css";
 
 const Register = () => {
   const { register } = useAuth();
@@ -10,7 +11,7 @@ const Register = () => {
     name: "",
     email: "",
     password: "",
-    role: "STUDENT"
+    role: "Student"
   });
 
   const [error, setError] = useState("");
@@ -27,14 +28,11 @@ const Register = () => {
   async function handleSubmit(e) {
     e.preventDefault();
 
-    console.log("REGISTER CLICKED");
-    console.log(formData);
-
     setError("");
     setSuccess("");
 
     if (!formData.name || !formData.email || !formData.password) {
-      setError("All fields are required");
+      setError("Please fill all fields");
       return;
     }
 
@@ -54,41 +52,35 @@ const Register = () => {
         name: "",
         email: "",
         password: "",
-        role: "student"
+        role: "Student"
       });
 
       setTimeout(() => {
         navigate("/login");
       }, 1200);
 
-    } catch(err){
-    console.log("FULL ERROR:", err);
-    console.log("RESPONSE:", err.response);
-    console.log("DATA:", err.response?.data);
+    } catch (err) {
+      const message =
+        err.response?.data?.message ||
+        "Registration failed. Please try again later";
 
-    const message =
-      err.response?.data?.message ||
-      err.message ||
-      "Registration failed. Please try again later.";
-
-    setError(message);
-  }finally {
+      setError(message);
+    } finally {
       setLoading(false);
     }
   }
 
   return (
-    <div>
-      <div>
+    <div className="auth-container">
+      <div className="auth-card">
         <h2>Create Account</h2>
 
-        {error && <p>{error}</p>}
-        {success && <p>{success}</p>}
+        {error && <div className="error">{error}</div>}
+        {success && <div className="success">{success}</div>}
 
         <form onSubmit={handleSubmit}>
           <div>
             <label htmlFor="name">Full Name</label>
-            <br />
             <input
               id="name"
               type="text"
@@ -99,11 +91,8 @@ const Register = () => {
             />
           </div>
 
-          <br />
-
           <div>
             <label htmlFor="email">Email</label>
-            <br />
             <input
               id="email"
               type="email"
@@ -114,35 +103,29 @@ const Register = () => {
             />
           </div>
 
-          <br />
-
           <div>
             <label htmlFor="password">Password</label>
-            <br />
             <input
               id="password"
               type="password"
               name="password"
               value={formData.password}
               onChange={handleChange}
-              placeholder="********"
+              placeholder="Enter your password"
             />
           </div>
 
-          <br />
-
           <div>
             <label htmlFor="role">Role</label>
-            <br />
             <select
               id="role"
               name="role"
               value={formData.role}
               onChange={handleChange}
             >
-              <option value="student">Student</option>
-              <option value="faculty">Faculty</option>
-              <option value="admin">Admin</option>
+              <option value="Student">Student</option>
+              <option value="Faculty">Faculty</option>
+              <option value="Admin">Admin</option>
             </select>
           </div>
 
@@ -152,8 +135,6 @@ const Register = () => {
             {loading ? "Registering..." : "Register"}
           </button>
         </form>
-
-        <br />
 
         <p>
           Already have an account? <Link to="/login">Login here</Link>

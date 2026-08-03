@@ -1,10 +1,11 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
+import "./Auth.css";
 
 const Login = () => {
-  const navigate = useNavigate();
   const { login } = useAuth();
+  const navigate = useNavigate();
 
   const [formData, setFormData] = useState({
     email: "",
@@ -23,8 +24,13 @@ const Login = () => {
 
   async function handleSubmit(e) {
     e.preventDefault();
-
     setError("");
+
+    if (!formData.email || !formData.password) {
+      setError("Please fill both fields");
+      return;
+    }
+
     setLoading(true);
 
     try {
@@ -40,61 +46,66 @@ const Login = () => {
         navigate("/admin");
       } else if (loggedInUser.role === "Faculty") {
         navigate("/faculty");
-      } else {
+      } else if (loggedInUser.role === "Student") {
         navigate("/student");
+      } else {
+        navigate("/");
       }
 
     } catch (err) {
-      console.log(err);
-      setError("Invalid email or password");
+      const message =
+        err.response?.data?.message ||
+        "Login failed. Please try again later";
+
+      setError(message);
     } finally {
       setLoading(false);
     }
   }
 
   return (
-    <div>
-      <h2>Login</h2>
+    <div className="auth-container">
+      <div className="auth-card">
+        <h2>Login</h2>
 
-      {error && <p>{error}</p>}
+        {error && <div className="error">{error}</div>}
 
-      <form onSubmit={handleSubmit}>
-        <div>
-          <input
-            type="email"
-            name="email"
-            value={formData.email}
-            onChange={handleChange}
-            placeholder="Enter Email"
-            required
-          />
-        </div>
+        <form onSubmit={handleSubmit}>
+          <div>
+            <label htmlFor="email">Email</label>
+            <input
+              id="email"
+              type="email"
+              name="email"
+              value={formData.email}
+              onChange={handleChange}
+              placeholder="Enter your email"
+            />
+          </div>
 
-        <br />
+          <div>
+            <label htmlFor="password">Password</label>
+            <input
+              id="password"
+              type="password"
+              name="password"
+              value={formData.password}
+              onChange={handleChange}
+              placeholder="Enter your password"
+            />
+          </div>
 
-        <div>
-          <input
-            type="password"
-            name="password"
-            value={formData.password}
-            onChange={handleChange}
-            placeholder="Enter Password"
-            required
-          />
-        </div>
+          <br />
 
-        <br />
+          <button type="submit" disabled={loading}>
+            {loading ? "Logging in..." : "Login"}
+          </button>
+        </form>
 
-        <button type="submit" disabled={loading}>
-          {loading ? "Logging in..." : "Login"}
-        </button>
-      </form>
-
-      <br />
-
-      <p>
-        Don't have an account? <Link to="/register">Register</Link>
-      </p>
+        <p>
+          Don't have an account? <Link to="/register">Register here</Link>
+        </p>
+      </div>
     </div>
   );
 };
