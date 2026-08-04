@@ -1,100 +1,164 @@
 import React, { useState } from "react";
-import api from "../Services/api";
+import "./AdminDashboard.css";
 
 const AdminDashboard = () => {
-  const [event, setEvent] = useState({
-    title: "",
-    date: "",
-    location: ""
+  const [events, setEvents] = useState([]);
+  const [editingId, setEditingId] = useState(null);
+
+  const [formData, setFormData] = useState({
+    event_name: "",
+    description: "",
+    event_date: "",
+    venue: "",
+    fee: ""
   });
 
-  const [loading, setLoading] = useState(false);
-  const [success, setSuccess] = useState("");
-  const [error, setError] = useState("");
-
   function handleChange(e) {
-    setEvent({
-      ...event,
+    setFormData({
+      ...formData,
       [e.target.name]: e.target.value
     });
   }
 
-  function resetForm() {
-    setEvent({
-      title: "",
-      date: "",
-      location: ""
-    });
-  }
-
-  async function handleSubmit(e) {
+  function handleSubmit(e) {
     e.preventDefault();
 
-    setLoading(true);
-    setError("");
-    setSuccess("");
+    if (editingId) {
+      // UPDATE
+      setEvents(
+        events.map((ev) =>
+          ev.event_id === editingId
+            ? { ...ev, ...formData }
+            : ev
+        )
+      );
 
-    try {
-      const response = await api.post("/events", event);
+      setEditingId(null);
+    } else {
+      // CREATE
+      const newEvent = {
+        event_id: Date.now(),
+        ...formData
+      };
 
-      console.log(response.data);
+      setEvents([...events, newEvent]);
+    }
 
-      setSuccess("Event created successfully");
-      resetForm();
-    } catch (err) {
-      console.error(err);
-      setError("Failed to create event");
-    } finally {
-      setLoading(false);
+    resetForm();
+  }
+
+  function handleEdit(event) {
+    setEditingId(event.event_id);
+    setFormData(event);
+  }
+
+  function handleDelete(id) {
+    if (window.confirm("Delete this event?")) {
+      setEvents(events.filter((ev) => ev.event_id !== id));
     }
   }
 
+  function resetForm() {
+    setFormData({
+      event_name: "",
+      description: "",
+      event_date: "",
+      venue: "",
+      fee: ""
+    });
+
+    setEditingId(null);
+  }
+
   return (
-    <div>
-      <h1>Admin Dashboard</h1>
+    <div className="admin-container">
+      <div className="admin-card">
+        <h2>{editingId ? "Edit Event" : "Create Event"}</h2>
 
-      <h2>Create Event</h2>
+        <form onSubmit={handleSubmit}>
+          <input
+            type="text"
+            name="event_name"
+            placeholder="Enter event name"
+            value={formData.event_name}
+            onChange={handleChange}
+            required
+          />
 
-      {success && <p>{success}</p>}
-      {error && <p>{error}</p>}
+          <textarea
+            name="description"
+            placeholder="Enter short description"
+            value={formData.description}
+            onChange={handleChange}
+          />
 
-      <form onSubmit={handleSubmit}>
-        <input
-          type="text"
-          name="title"
-          value={event.title}
-          onChange={handleChange}
-          placeholder="Event Title"
-          required
-        />
+          <input
+            type="date"
+            name="event_date"
+            value={formData.event_date}
+            onChange={handleChange}
+            required
+          />
 
-        <br /><br />
+          <input
+            type="text"
+            name="venue"
+            placeholder="Enter venue"
+            value={formData.venue}
+            onChange={handleChange}
+            required
+          />
 
-        <input
-          type="date"
-          name="date"
-          value={event.date}
-          onChange={handleChange}
-          required
-        />
+          <input
+            type="number"
+            name="fee"
+            placeholder="Enter fee"
+            value={formData.fee}
+            onChange={handleChange}
+          />
 
-        <br /><br />
+          <div className="btn-group">
+            <button type="submit">
+              {editingId ? "Update Event" : "Create Event"}
+            </button>
 
-        <input
-          type="text"
-          name="location"
-          value={event.location}
-          onChange={handleChange}
-          placeholder="Event Location"
-          required
-        />
+            {editingId && (
+              <button type="button" onClick={resetForm}>
+                Cancel
+              </button>
+            )}
+          </div>
+        </form>
 
-        <br /><br />
+        <h3>All Events</h3>
 
-        <button type="submit" disabled={loading}>
-          {loading ? "Submitting..." : "Create Event"}
-        </button>
-      </form>
+        <table>
+          <thead>
+            <tr>
+              <th>Event Name</th>
+              <th>Date</th>
+              <th>Venue</th>
+              <th>Fee</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+
+          <tbody>
+            {events.map((event) => (
+              <tr key={event.event_id}>
+                <td>{event.event_name}</td>
+                <td>{event.event_date}</td>
+                <td>{event.venue}</td>
+                <td>₹{event.fee}</td>
+                <td>
+                  <button onClick={() => handleEdit(event)}>Edit</button>
+                  <button onClick={() => handleDelete(event.event_id)}>Delete</button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 };
