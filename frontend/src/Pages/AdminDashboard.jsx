@@ -1,9 +1,11 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
+import api from "../Services/api";
 import "./AdminDashboard.css";
 
 const AdminDashboard = () => {
   const [events, setEvents] = useState([]);
   const [editingId, setEditingId] = useState(null);
+  const [submitting, setSubmitting] = useState(false);
 
   const [formData, setFormData] = useState({
     event_name: "",
@@ -13,6 +15,19 @@ const AdminDashboard = () => {
     fee: ""
   });
 
+  useEffect(() => {
+    fetchEvents();
+  }, []);
+
+  async function fetchEvents() {
+    try {
+      const response = await api.get("/events");
+      setEvents(response.data.data || response.data);
+    } catch (error) {
+      console.error(error);
+    }
+  }
+
   function handleChange(e) {
     setFormData({
       ...formData,
@@ -20,45 +35,53 @@ const AdminDashboard = () => {
     });
   }
 
-  function handleSubmit(e) {
+  async function handleSubmit(e) {
     e.preventDefault();
+    setSubmitting(true);
 
-    if (editingId) {
-      // UPDATE
-      setEvents(
-        events.map((ev) =>
-          ev.event_id === editingId
-            ? { ...ev, ...formData }
-            : ev
-        )
-      );
+    try {
+      if (editingId) {
+        await api.put(`/events/${editingId}`, formData);
+      } else {
+        await api.post("/events", formData);
+      }
 
-      setEditingId(null);
-    } else {
-      // CREATE
-      const newEvent = {
-        event_id: Date.now(),
-        ...formData
-      };
+      await fetchEvents();
 
-      setEvents([...events, newEvent]);
+      resetForm();
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setSubmitting(false);
     }
-
-    resetForm();
   }
 
   function handleEdit(event) {
     setEditingId(event.event_id);
-    setFormData(event);
+
+    setFormData({
+      event_name: event.event_name,
+      description: event.description,
+      event_date: event.event_date?.split("T")[0] || event.event_date,
+      venue: event.venue,
+      fee: event.fee
+    });
   }
 
-  function handleDelete(id) {
-    if (window.confirm("Delete this event?")) {
-      setEvents(events.filter((ev) => ev.event_id !== id));
+  async function handleDelete(id) {
+    if (!window.confirm("Delete this event?")) return;
+
+    try {
+      await api.delete(`/events/${id}`);
+      fetchEvents();
+    } catch (error) {
+      console.error(error);
     }
   }
 
   function resetForm() {
+    setEditingId(null);
+
     setFormData({
       event_name: "",
       description: "",
@@ -66,8 +89,6 @@ const AdminDashboard = () => {
       venue: "",
       fee: ""
     });
-
-    setEditingId(null);
   }
 
   return (
@@ -118,12 +139,18 @@ const AdminDashboard = () => {
           />
 
           <div className="btn-group">
-            <button type="submit">
-              {editingId ? "Update Event" : "Create Event"}
+            <button type="submit" disabled={submitting}>
+              {submitting
+                ? editingId
+                  ? "Updating..."
+                  : "Submitting..."
+                : editingId
+                ? "Update Event"
+                : "Create Event"}
             </button>
 
             {editingId && (
-              <button type="button" onClick={resetForm}>
+              <button type="button" className="cancel-btn" onClick={resetForm}>
                 Cancel
               </button>
             )}
@@ -147,12 +174,17 @@ const AdminDashboard = () => {
             {events.map((event) => (
               <tr key={event.event_id}>
                 <td>{event.event_name}</td>
-                <td>{event.event_date}</td>
+                <td>{event.event_date?.split("T")[0] || event.event_date}</td>
                 <td>{event.venue}</td>
                 <td>₹{event.fee}</td>
                 <td>
-                  <button onClick={() => handleEdit(event)}>Edit</button>
-                  <button onClick={() => handleDelete(event.event_id)}>Delete</button>
+                  <button className="edit-btn" onClick={() => handleEdit(event)}>
+                    Edit
+                  </button>
+
+                  <button className="delete-btn" onClick={() => handleDelete(event.event_id)}>
+                    Delete
+                  </button>
                 </td>
               </tr>
             ))}
