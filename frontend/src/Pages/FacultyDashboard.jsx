@@ -20,11 +20,11 @@ const FacultyDashboard = () => {
       setLoading(true);
       setError("");
 
-      // ✅ matches backend /reports/summary
+      
       const eventRes = await api.get("/reports/summary");
       setEventSummary(eventRes.data.data);
 
-      // ✅ matches backend /reports/students
+  
       const studentRes = await api.get("/reports/students");
       setStudentSummary(studentRes.data.data);
 
