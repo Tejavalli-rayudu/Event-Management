@@ -6,9 +6,12 @@ async function registerForEvent(req, res) {
 
     try {
 
+        console.log("REQ.USER =", req.user);
+        console.log("REQ.BODY =", req.body);
+
         const registration =
             await registrationService.registerForEvent(
-                req.user.user_id,
+                req.user.id,
                 req.body.event_id
             );
 
@@ -19,6 +22,8 @@ async function registerForEvent(req, res) {
         });
 
     } catch (error) {
+
+        console.log(error);
 
         res.status(400).json({
             success: false,

@@ -162,14 +162,14 @@ const FacultyDashboard = () => {
               </thead>
 
               <tbody>
-                {studentSummary.map((student) => (
-                  <tr key={student.user_id}>
-                    <td>{student.name}</td>
-                    <td>{student.email}</td>
-                    <td>{student.total_events_registered}</td>
-                  </tr>
-                ))}
-              </tbody>
+                {studentSummary.map((row) => (
+                  <tr key={row.user_id}>
+                    <td>{row.name}</td>
+                    <td>{row.email}</td>
+                    <td>{row.total_events_registered}</td>
+                    </tr>
+                  ))}
+                  </tbody>
             </table>
           )}
         </>

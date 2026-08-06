@@ -1,132 +1,134 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import api from "../service/axios";
-//import "./StudentDashboard.css";
+import { useAuth } from "../context/AuthContext";
 
-const StudentDashboard = () => {
-  const [events, setEvents] = useState([]);
+export default function StudentDashboard() {
+  const { user } = useAuth();
 
-  // keep registrations after refresh
-  const [myRegistrations, setMyRegistrations] = useState(() => {
-    const saved = localStorage.getItem("myRegistrations");
-    return saved ? JSON.parse(saved) : [];
-  });
-
-  // keep registered badge after refresh
-  const [registeredEventTitles, setRegisteredEventTitles] = useState(() => {
-    const saved = localStorage.getItem("registeredEventTitles");
-    return saved ? new Set(JSON.parse(saved)) : new Set();
-  });
-
-  const [registeringId, setRegisteringId] = useState(null);
-  const [message, setMessage] = useState("");
   const [activeTab, setActiveTab] = useState("events");
+  const [events, setEvents] = useState([]);
+  const [registrations, setRegistrations] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
+  const [registeringId, setRegisteringId] = useState(null);
 
-  // load admin events
   useEffect(() => {
-    fetchEvents();
+    loadData();
   }, []);
 
-  async function fetchEvents() {
+  async function loadData() {
     try {
-      const response = await api.get("/events");
-      setEvents(response.data.data || response.data);
-    } catch (error) {
-      console.error(error);
+      setLoading(true);
+
+      const eventsRes = await api.get("/events");
+      setEvents(eventsRes.data.data || []);
+
+      const regRes = await api.get("/registrations");
+      setRegistrations(regRes.data.data || []);
+    } catch (err) {
+      setError(
+        err.response?.data?.message ||
+          "Failed to load data"
+      );
+    } finally {
+      setLoading(false);
     }
   }
 
-  // save registrations in localStorage
-  useEffect(() => {
-    localStorage.setItem(
-      "myRegistrations",
-      JSON.stringify(myRegistrations)
-    );
-
-    localStorage.setItem(
-      "registeredEventTitles",
-      JSON.stringify([...registeredEventTitles])
-    );
-  }, [myRegistrations, registeredEventTitles]);
-
-  // REGISTER
-  async function handleRegister(event) {
+  async function handleRegister(eventId) {
     try {
-      setRegisteringId(event.event_id);
+      setRegisteringId(eventId);
+      setError("");
+      setSuccess("");
 
-      await new Promise((resolve) => setTimeout(resolve, 500));
-
-      setRegisteredEventTitles((prev) => {
-        const updated = new Set(prev);
-        updated.add(event.event_name);
-        return updated;
+      await api.post("/registrations", {
+        event_id: eventId,
       });
 
-      setMyRegistrations((prev) => [
-        ...prev,
-        {
-          ...event,
-          registered_on: new Date().toLocaleDateString()
-        }
-      ]);
+      setSuccess("Registered successfully!");
 
-      setMessage("Registration successful!");
-    } catch (error) {
-      setMessage("Registration failed.");
+      await loadData();
+    } catch (err) {
+      setError(
+        err.response?.data?.message ||
+          "Registration failed"
+      );
     } finally {
       setRegisteringId(null);
     }
   }
 
-  // CANCEL
-  function handleCancel(id) {
+  async function handleCancel(registrationId) {
     if (!window.confirm("Cancel this registration?")) return;
 
-    const cancelledEvent = myRegistrations.find(
-      (r) => r.event_id === id
-    );
+    try {
+      await api.delete(
+        `/registrations/${registrationId}`
+      );
 
-    setMyRegistrations((prev) =>
-      prev.filter((r) => r.event_id !== id)
-    );
+      setSuccess("Registration cancelled!");
 
-    setRegisteredEventTitles((prev) => {
-      const updated = new Set(prev);
-
-      if (cancelledEvent) {
-        updated.delete(cancelledEvent.event_name);
-      }
-
-      return updated;
-    });
-
-    setMessage("Registration cancelled successfully!");
+      await loadData();
+    } catch (err) {
+      setError(
+        err.response?.data?.message ||
+          "Cancel failed"
+      );
+    }
   }
 
+  // ONLY CURRENT STUDENT REGISTRATIONS
+  const myRegistrations = registrations.filter(
+    (r) =>
+      r.student_name === user?.name ||
+      r.email === user?.email
+  );
+
+  // EVENTS ALREADY REGISTERED
+  const registeredEventIds = new Set(
+    myRegistrations
+      .filter((r) => r.status === "Registered")
+      .map((r) => Number(r.event_id))
+  );
+
   return (
-    <div className="student-container">
+    <div className="container">
       <h2>Student Dashboard</h2>
 
-      {message && <p className="success-msg">{message}</p>}
+      {error && <p className="error">{error}</p>}
+      {success && <p className="success">{success}</p>}
 
       <div className="tabs">
         <button
-          className={activeTab === "events" ? "active" : ""}
+          className={
+            activeTab === "events"
+              ? "active-tab"
+              : ""
+          }
           onClick={() => setActiveTab("events")}
         >
           Available Events
         </button>
 
         <button
-          className={activeTab === "registrations" ? "active" : ""}
-          onClick={() => setActiveTab("registrations")}
+          className={
+            activeTab === "registrations"
+              ? "active-tab"
+              : ""
+          }
+          onClick={() =>
+            setActiveTab("registrations")
+          }
         >
           My Registrations
         </button>
       </div>
 
-      {/* AVAILABLE EVENTS */}
-      {activeTab === "events" && (
-        <table>
+      {loading ? (
+        <p>Loading...</p>
+      ) : activeTab === "events" ? (
+        <table className="dashboard-table">
           <thead>
             <tr>
               <th>Event</th>
@@ -141,17 +143,33 @@ const StudentDashboard = () => {
             {events.map((ev) => (
               <tr key={ev.event_id}>
                 <td>{ev.event_name}</td>
-                <td>{ev.event_date?.split("T")[0] || ev.event_date}</td>
-                <td>{ev.venue}</td>
-                <td>₹{ev.fee}</td>
+
                 <td>
-                  {registeredEventTitles.has(ev.event_name) ? (
-                    <span className="badge">Registered</span>
+                  {new Date(
+                    ev.event_date
+                  ).toLocaleDateString()}
+                </td>
+
+                <td>{ev.venue}</td>
+
+                <td>₹{ev.fee || 0}</td>
+
+                <td>
+                  {registeredEventIds.has(
+                    Number(ev.event_id)
+                  ) ? (
+                    <button disabled>
+                      Registered
+                    </button>
                   ) : (
                     <button
-                      className="btn btn-small"
-                      disabled={registeringId === ev.event_id}
-                      onClick={() => handleRegister(ev)}
+                      disabled={
+                        registeringId ===
+                        ev.event_id
+                      }
+                      onClick={() =>
+                        handleRegister(ev.event_id)
+                      }
                     >
                       {registeringId === ev.event_id
                         ? "Registering..."
@@ -163,45 +181,54 @@ const StudentDashboard = () => {
             ))}
           </tbody>
         </table>
-      )}
-
-      {/* MY REGISTRATIONS */}
-      {activeTab === "registrations" && (
-        <table>
+      ) : myRegistrations.length === 0 ? (
+        <p>
+          You have not registered for any
+          events yet.
+        </p>
+      ) : (
+        <table className="dashboard-table">
           <thead>
             <tr>
               <th>Event</th>
               <th>Registered On</th>
+              <th>Status</th>
               <th>Action</th>
             </tr>
           </thead>
 
           <tbody>
-            {myRegistrations.length === 0 ? (
-              <tr>
-                <td colSpan="3">No registrations yet</td>
-              </tr>
-            ) : (
-              myRegistrations.map((ev) => (
-                <tr key={ev.event_id}>
-                  <td>{ev.event_name}</td>
-                  <td>{ev.registered_on}</td>
-                  <td>
+            {myRegistrations.map((r) => (
+              <tr key={r.registration_id}>
+                <td>{r.event_name}</td>
+
+                <td>
+                  {new Date(
+                    r.registration_date
+                  ).toLocaleDateString()}
+                </td>
+
+                <td>{r.status}</td>
+
+                <td>
+                  {r.status === "Registered" && (
                     <button
-                      className="btn btn-small btn-danger"
-                      onClick={() => handleCancel(ev.event_id)}
+                      className="cancel-btn"
+                      onClick={() =>
+                        handleCancel(
+                          r.registration_id
+                        )
+                      }
                     >
                       Cancel
                     </button>
-                  </td>
-                </tr>
-              ))
-            )}
+                  )}
+                </td>
+              </tr>
+            ))}
           </tbody>
         </table>
       )}
     </div>
   );
-};
-
-export default StudentDashboard;
+}
