@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import api from "../Services/api";
+import api from "../service/axios";
 
 const FacultyDashboard = () => {
   const [activeTab, setActiveTab] = useState("summary");

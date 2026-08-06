@@ -1,47 +1,88 @@
-import { useState, createContext, useContext } from "react";
-import api from "../Services/api";
+import {
+  useState,
+  createContext,
+  useContext
+} from "react";
+
+import api from "../service/axios";
 
 const AuthContext = createContext(null);
 
 export function AuthProvider({ children }) {
+
   const [user, setUser] = useState(() => {
     const savedUser = localStorage.getItem("user");
-    return savedUser ? JSON.parse(savedUser) : null;
+
+    return savedUser
+      ? JSON.parse(savedUser)
+      : null;
   });
 
   // LOGIN
   async function login(email, password) {
-    const response = await api.post("/auth/login", {
-      email,
-      password,
-    });
 
-    const { token, user: loggedInUser } = response.data.data;
+    const response = await api.post(
+      "/auth/login",
+      {
+        email,
+        password
+      }
+    );
 
-    localStorage.setItem("token", token);
-    localStorage.setItem("user", JSON.stringify(loggedInUser));
+    // IMPORTANT
+    const { token, user: loggedInUser } =
+      response.data.data;
 
+    console.log(
+      "Logged in user:",
+      loggedInUser
+    );
+
+    // SAVE TOKEN
+    localStorage.setItem(
+      "token",
+      token
+    );
+
+    // SAVE USER
+    localStorage.setItem(
+      "user",
+      JSON.stringify(loggedInUser)
+    );
+
+    // UPDATE STATE
     setUser(loggedInUser);
 
     return loggedInUser;
   }
 
   // REGISTER
-  async function register(name, email, password, role) {
-    const response = await api.post("/auth/register", {
-      name,
-      email,
-      password,
-      role,
-    });
+  async function register(
+    name,
+    email,
+    password,
+    role
+  ) {
+
+    const response = await api.post(
+      "/auth/register",
+      {
+        name,
+        email,
+        password,
+        role
+      }
+    );
 
     return response.data;
   }
 
   // LOGOUT
   function logout() {
+
     localStorage.removeItem("token");
     localStorage.removeItem("user");
+
     setUser(null);
   }
 
@@ -50,7 +91,7 @@ export function AuthProvider({ children }) {
     login,
     register,
     logout,
-    isAuthenticated: !!user,
+    isAuthenticated: !!user
   };
 
   return (
@@ -58,21 +99,6 @@ export function AuthProvider({ children }) {
       {children}
     </AuthContext.Provider>
   );
-}
-async function login(email, password) {
-  const response = await api.post("/auth/login", {
-    email,
-    password,
-  });
-
-  const { token, user: loggedInUser } = response.data.data;
-
-  localStorage.setItem("token", token);
-  localStorage.setItem("user", JSON.stringify(loggedInUser));
-
-  setUser(loggedInUser);
-
-  return loggedInUser;
 }
 
 export function useAuth() {
