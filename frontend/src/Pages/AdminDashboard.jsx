@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import api from "../service/axios";
-import "./AdminDashboard.css";
+
 
 const AdminDashboard = () => {
   const [events, setEvents] = useState([]);
