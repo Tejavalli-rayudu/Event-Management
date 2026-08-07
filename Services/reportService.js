@@ -21,7 +21,7 @@ async function getEventSummary() {
 }
 
 // STUDENTS BY EVENT
-async function getStudentsByEvent(eventId) {
+async function getStudentByEvent(eventId) {
   const [rows] = await db.query(`
     SELECT
       u.user_id,
@@ -64,6 +64,6 @@ async function getStudentSummary() {
 }
 module.exports = {
   getEventSummary,
-  getStudentsByEvent,
+  getStudentByEvent,
   getStudentSummary,
 };

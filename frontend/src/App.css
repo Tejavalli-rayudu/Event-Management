@@ -550,3 +550,121 @@ textarea:focus {
   background: #b91c1c; /* darker red */
   transform: translateY(-1px);
 }
+
+/* ===== RED LOGOUT BUTTON ===== */
+.logout-link {
+  background: linear-gradient(135deg, #ef4444, #dc2626) !important;
+  color: white !important;
+  border: none;
+  padding: 15px;
+  border-radius: 7px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 6px 14px rgba(74, 70, 70, 0.35);
+}
+
+.logout-link:hover {
+  background: linear-gradient(135deg, #dc2626, #b91c1c) !important;
+  transform: translateY(-2px);
+  box-shadow: 0 8px 18px rgba(185, 28, 28, 0.45);
+}
+/* =====================================
+   HOME PAGE CSS
+===================================== */
+
+.home-container {
+  width: 100%;
+  max-width: 1200px;
+  margin: 50px auto;
+  padding: 0 20px;
+}
+
+.home-card {
+  background: white;
+  border-radius: 24px;
+  padding: 50px 40px;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.08);
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Decorative top line */
+.home-card::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 6px;
+  background: linear-gradient(90deg, #2563eb, #1e3a8a, #2563eb);
+}
+
+.home-card h1 {
+  font-size: 3rem;
+  color: #1e3a8a;
+  margin-bottom: 20px;
+  font-weight: 700;
+}
+
+.home-card p {
+  font-size: 1.1rem;
+  color: #010914;
+  line-height: 1.8;
+  max-width: 800px;
+  margin: 0 auto 30px;
+}
+
+/* Welcome highlight */
+.home-card strong {
+  color: #2563eb;
+}
+
+/* Optional feature section */
+.home-features {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 20px;
+  margin-top: 40px;
+}
+
+.feature-box {
+  background: #f8fbff;
+  border: 1px solid #e2e8f0;
+  border-radius: 18px;
+  padding: 22px;
+  transition: 0.3s ease;
+}
+
+.feature-box:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 22px rgba(37, 99, 235, 0.12);
+}
+
+.feature-box h3 {
+  color: #3756ac;
+  margin-bottom: 10px;
+  font-size: 1.1rem;
+}
+
+.feature-box p {
+  font-size: 0.95rem;
+  color: #647da0;
+  margin: 0;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .home-card {
+    padding: 35px 22px;
+  }
+
+  .home-card h1 {
+    font-size: 2rem;
+  }
+
+  .home-card p {
+    font-size: 1rem;
+  }
+}
