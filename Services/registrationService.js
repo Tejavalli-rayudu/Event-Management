@@ -4,6 +4,11 @@ const db = require("../config/db");
 async function registerForEvent(userId, eventId) {
   console.log("SERVICE =", userId, eventId);
 
+  // PREVENT NULL USER ID
+  if (!userId) {
+    throw new Error("User ID is missing. Please login again.");
+  }
+
   // CHECK EVENT EXISTS
   const [events] = await db.query(
     "SELECT * FROM Events WHERE event_id = ?",
@@ -27,11 +32,11 @@ async function registerForEvent(userId, eventId) {
     throw new Error("Already registered for this event");
   }
 
-  // INSERT
+  // INSERT REGISTRATION
   const [result] = await db.query(
-    `INSERT INTO Registrations (user_id, event_id)
-     VALUES (?, ?)`,
-    [userId, eventId]
+    `INSERT INTO Registrations (user_id, event_id, status)
+     VALUES (?, ?, ?)`,
+    [userId, eventId, "Registered"]
   );
 
   return {
@@ -67,7 +72,7 @@ async function getAllRegistrations() {
   return rows;
 }
 
-// CANCEL
+// CANCEL REGISTRATION
 async function cancelRegistration(id) {
   await db.query(
     `UPDATE Registrations
